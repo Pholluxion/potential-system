@@ -8,11 +8,13 @@ environment:
 
 dependencies:
   camera: ^0.10.5+5
+  carousel_slider: ^4.2.1
   fast_image_resizer: ^0.0.2
   flutter:
     sdk: flutter
   pixels:
     path: packages/pixels
+  web_socket_channel: ^2.4.0
 
 dev_dependencies:
   flutter_test:
