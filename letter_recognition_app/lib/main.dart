@@ -27,11 +27,17 @@ class _PixelPageState extends State<PixelPage> {
   late final Uri uriPhoto;
   late final WebSocketChannel channelPhoto;
 
+  late final Uri uriLabel;
+  late final WebSocketChannel channelLabel;
+
   @override
   void initState() {
     super.initState();
     uriPhoto = Uri.parse('ws://viaduct.proxy.rlwy.net:19322/ws');
+    uriLabel = Uri.parse('ws://viaduct.proxy.rlwy.net:19322/label');
+
     channelPhoto = WebSocketChannel.connect(uriPhoto);
+    channelLabel = WebSocketChannel.connect(uriLabel);
 
     _controller = PixelImageController(
       pixels: Uint8List(28 * 28).buffer.asByteData(),
@@ -58,41 +64,68 @@ class _PixelPageState extends State<PixelPage> {
   void dispose() {
     _controller.dispose();
     _controller2.dispose();
+    channelPhoto.sink.close();
+    channelLabel.sink.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Write a letter')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(elevation: 0),
       body: Center(
         child: Column(
           children: [
             Flexible(
               flex: 1,
-              child: StreamBuilder(
-                stream: channelPhoto.stream,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    _controller2.pixels =
-                        Uint8List.fromList(snapshot.data as List<int>)
-                            .buffer
-                            .asByteData();
-                    return PixelImage(
-                      width: 28,
-                      height: 28,
-                      palette: const PixelPalette(
-                        colors: [
-                          Colors.white,
-                          Colors.black,
-                        ],
-                      ),
-                      pixels: _controller2.pixels,
-                    );
-                  } else {
-                    return const CircularProgressIndicator();
-                  }
-                },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  StreamBuilder(
+                    stream: channelPhoto.stream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        _controller2.pixels =
+                            Uint8List.fromList(snapshot.data as List<int>)
+                                .buffer
+                                .asByteData();
+                        return PixelImage(
+                          width: 28,
+                          height: 28,
+                          palette: const PixelPalette(
+                            colors: [
+                              Colors.white,
+                              Colors.black,
+                            ],
+                          ),
+                          pixels: _controller2.pixels,
+                        );
+                      } else {
+                        return const SizedBox(
+                          height: 200,
+                        );
+                      }
+                    },
+                  ),
+                  StreamBuilder(
+                    stream: channelLabel.stream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return Text(
+                          snapshot.data.toString(),
+                          style: const TextStyle(
+                            fontSize: 100,
+                          ),
+                        );
+                      } else {
+                        return const SizedBox(
+                          height: 200,
+                        );
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
             Flexible(
@@ -118,13 +151,13 @@ class _PixelPageState extends State<PixelPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           FloatingActionButton(
-            child: const Icon(Icons.delete),
+            child: const Icon(Icons.cleaning_services),
             onPressed: () {
               _controller.pixels = Uint8List(28 * 28).buffer.asByteData();
             },
           ),
           FloatingActionButton(
-            child: const Icon(Icons.send),
+            child: const Icon(Icons.send_outlined),
             onPressed: () {
               final image = _controller.pixels;
               final bytes = image.buffer.asUint8List();
